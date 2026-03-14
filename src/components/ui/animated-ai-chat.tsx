@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react"
+import { useAuth } from "../../lib/AuthContext";
 
 interface UseAutoResizeTextareaProps {
     minHeight: number;
@@ -134,7 +135,16 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 )
 Textarea.displayName = "Textarea"
 
+interface Message {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    type?: string;
+}
+
 export function AnimatedAIChat() {
+    const { user } = useAuth();
+    const [messages, setMessages] = useState<Message[]>([]);
     const [value, setValue] = useState("");
     const [attachments, setAttachments] = useState<string[]>([]);
     const [isTyping, setIsTyping] = useState(false);
@@ -258,16 +268,62 @@ export function AnimatedAIChat() {
         }
     };
 
-    const handleSendMessage = () => {
-        if (value.trim()) {
-            startTransition(() => {
-                setIsTyping(true);
-                setTimeout(() => {
-                    setIsTyping(false);
-                    setValue("");
-                    adjustHeight(true);
-                }, 3000);
+    const handleSendMessage = async () => {
+        if (!value.trim()) return;
+
+        if (!user) {
+            setMessages(prev => [...prev, {
+                id: 'auth-' + Date.now(),
+                role: 'assistant',
+                content: "Please sign in to use the AI Assistant features."
+            }]);
+            return;
+        }
+
+        const userMsg: Message = {
+            id: Date.now().toString(),
+            role: 'user',
+            content: value.trim()
+        };
+
+        setMessages(prev => [...prev, userMsg]);
+        const currentPrompt = value;
+        setValue("");
+        adjustHeight(true);
+        setIsTyping(true);
+
+        try {
+            const token = await user.getIdToken();
+            const response = await fetch('/api/agent/command', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ command: currentPrompt }),
             });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            
+            const assistantMsg: Message = {
+                id: data.id || Date.now().toString(),
+                role: 'assistant',
+                content: data.text,
+                type: data.type
+            };
+
+            setMessages(prev => [...prev, assistantMsg]);
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            setMessages(prev => [...prev, {
+                id: 'error-' + Date.now(),
+                role: 'assistant',
+                content: "Error communicating with service. Please ensure the backend is running."
+            }]);
+        } finally {
+            setIsTyping(false);
         }
     };
 
@@ -298,27 +354,71 @@ export function AnimatedAIChat() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                 >
-                    <div className="text-center space-y-3">
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                            className="inline-block"
-                        >
-                            <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tighter text-white pb-1">
-                                How can I help today?
-                            </h2>
-                            <motion.div 
-                                className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                                initial={{ width: 0, opacity: 0 }}
-                                animate={{ width: "100%", opacity: 1 }}
-                                transition={{ delay: 0.5, duration: 0.8 }}
-                            />
-                        </motion.div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                            Type a command or ask a question
-                        </p>
-                    </div>
+                    {messages.length === 0 && (
+                        <div className="text-center space-y-3">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
+                                className="inline-block"
+                            >
+                                <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tighter text-white pb-1">
+                                    How can I help today?
+                                </h2>
+                                <motion.div 
+                                    className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                    initial={{ width: 0, opacity: 0 }}
+                                    animate={{ width: "100%", opacity: 1 }}
+                                    transition={{ delay: 0.5, duration: 0.8 }}
+                                />
+                            </motion.div>
+                            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                                Type a command or ask a question
+                            </p>
+                        </div>
+                    )}
+
+                    <AnimatePresence>
+                        {messages.length > 0 && (
+                            <div className="flex flex-col h-full"> 
+                                <div 
+                                    ref={(el) => {
+                                        if (el) el.scrollTop = el.scrollHeight;
+                                    }}
+                                    className="space-y-6 max-h-[400px] overflow-y-auto px-4 custom-scrollbar scroll-smooth"
+                                >
+                                    {messages.map((msg) => (
+                                        <motion.div
+                                            key={msg.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className={cn(
+                                                "flex flex-col gap-2",
+                                                msg.role === 'user' ? "items-end" : "items-start"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "px-4 py-3 rounded-2xl max-w-[85%] text-sm leading-relaxed",
+                                                msg.role === 'user' 
+                                                    ? "bg-white/10 text-white border border-white/10" 
+                                                    : "bg-white/[0.03] text-white/80 border border-white/5"
+                                            )}>
+                                                {msg.role === 'assistant' && (
+                                                    <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                                                        <Sparkles size={10} />
+                                                        <span>Agent Transformation</span>
+                                                    </div>
+                                                )}
+                                                <div className="whitespace-pre-wrap font-light tracking-wide">
+                                                    {msg.content}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </AnimatePresence>
 
                     <motion.div 
                         className="relative backdrop-blur-2xl bg-white/[0.03] rounded-[2rem] border border-white/10 shadow-2xl"

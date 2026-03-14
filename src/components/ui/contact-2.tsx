@@ -19,9 +19,36 @@ export const Contact2 = ({
 }: Contact2Props) => {
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('firstname'),
+      company: formData.get('company'),
+      email: formData.get('email'),
+      website: formData.get('website'),
+      project_type: formData.get('type'),
+      budget: formData.get('budget'),
+      message: formData.get('message'),
+    };
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+      } else {
+        console.error('Failed to submit form');
+        alert('Transmission failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('Error connecting to station.');
+    }
   };
 
   if (isSubmitted) {

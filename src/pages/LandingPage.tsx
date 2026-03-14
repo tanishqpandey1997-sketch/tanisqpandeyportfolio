@@ -114,6 +114,8 @@ export default function LandingPage() {
               loop
               muted
               playsInline
+              preload="none"
+              poster="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
               className="w-full h-full object-cover opacity-60 grayscale contrast-125"
               src="https://www.shutterstock.com/shutterstock/videos/3568704447/preview/stock-footage-animation-of-spinning-globe-of-the-earth-planet-from-glowing-blue-particulars-on-dark-background.webm"
             />
