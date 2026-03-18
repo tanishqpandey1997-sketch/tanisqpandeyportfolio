@@ -1,0 +1,1 @@
+chrome-extension://eaeedemddlledlghhjebjgdmhjekgegd/data/plugins/global.js

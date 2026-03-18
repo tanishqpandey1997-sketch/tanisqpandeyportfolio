@@ -1,0 +1,1 @@
+chrome-extension://fdcnegogpncmfejlfnffnofpngdiejii/assets/contentScript.ts-loader-C1BF0yge.js
