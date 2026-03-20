@@ -58,70 +58,101 @@
             display: none !important;
             visibility: hidden !important;
             pointer-events: none !important;
+            opacity: 0 !important;
         }
         
         body {
             cursor: auto !important;
         }
 
-        /* Force Case Studies list to vertical stack "perfect synced" */
-        .list.w-dyn-items {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
+        /* Force Case Studies list to vertical stack "perfect synced" using Grid */
+        #slider-id, .list.w-dyn-items, [role="list"].list {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 100px !important;
             width: 100% !important;
             max-width: 1200px !important;
             margin: 0 auto !important;
+            overflow: visible !important;
+            background: transparent !important;
+            transform: none !important;
         }
 
-        .item.w-dyn-item {
-            width: 90% !important;
+        .item.w-dyn-item, [role="listitem"].item {
+            width: 100% !important;
             max-width: 1000px !important;
-            margin: 0 auto 80px auto !important;
+            margin: 0 auto !important;
             display: block !important;
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            transform: none !important;
+            flex: none !important;
         }
 
         .img-link {
             display: block !important;
             width: 100% !important;
+            text-decoration: none !important;
         }
 
         .img-wrap {
             width: 100% !important;
             height: auto !important;
             aspect-ratio: 16/9 !important;
-            margin-bottom: 20px !important;
+            margin-bottom: 25px !important;
+            overflow: hidden !important;
+            background-color: #111 !important;
+        }
+
+        .project-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
         }
 
         .card-title-arrow {
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            margin-top: 20px !important;
+            margin-top: 25px !important;
         }
 
         .feat-card-title {
-            font-size: clamp(24px, 4vw, 36px) !important;
+            font-size: clamp(28px, 5vw, 42px) !important;
             margin: 0 !important;
+            color: white !important;
+            font-family: inherit !important;
         }
 
         .text-block-4 {
-            font-size: clamp(16px, 1.5vw, 20px) !important;
+            font-size: clamp(16px, 1.8vw, 22px) !important;
             line-height: 1.6 !important;
-            margin-top: 10px !important;
-            max-width: 800px !important;
+            margin-top: 15px !important;
+            max-width: 850px !important;
+            color: #ccc !important;
+            font-family: inherit !important;
         }
 
+        .featured-header-container {
+            margin-bottom: 80px !important;
+            text-align: center !important;
+        }
+
+        /* Responsive adjustments */
         @media screen and (max-width: 767px) {
+            #slider-id {
+                gap: 60px !important;
+            }
             .item.w-dyn-item {
                 width: 95% !important;
-                margin-bottom: 50px !important;
             }
             .feat-card-title {
-                font-size: 28px !important;
+                font-size: 30px !important;
             }
             .text-block-4 {
-                font-size: 16px !important;
+                font-size: 17px !important;
             }
         }
     </style>
